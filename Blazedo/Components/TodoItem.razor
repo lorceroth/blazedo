@@ -1,0 +1,49 @@
+﻿<div class="box todo-item">
+    <div class="columns is-customized">
+        <div class="column">
+            <label class="switch">
+                <input class="checkbox" type="checkbox" checked="@Model.CompletedAt.HasValue" @onchange="UpdateSwitch" />
+                <span class="track"></span>
+                <span class="lever"></span>
+            </label>
+        </div>
+
+        <div class="column is-full">
+            <p class="todo-description">
+                @Model.Description
+            </p>
+        </div>
+
+        <div class="column">
+            <button class="button is-light is-small" type="button" title="Remove" @onclick="@(() => OnDelete.Invoke(Model))">
+                Remove
+            </button>
+        </div>
+    </div>
+
+    @if  (Model.CompletedAt.HasValue)
+    {
+        <p class="has-text-grey-light">
+            Completed @Model.CompletedAt.Value.Humanize()
+        </p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Todo Model { get; set; }
+
+    [Parameter]
+    public Func<Todo, Task> OnChange { get; set; }
+
+    [Parameter]
+    public Func<Todo, Task> OnDelete { get; set; }
+
+    private async Task UpdateSwitch(ChangeEventArgs e)
+    {
+        var isChecked = (bool)e.Value;
+        Model.CompletedAt = isChecked ? DateTime.UtcNow : (DateTime?)null;
+
+        await OnChange.Invoke(Model);
+    }
+}

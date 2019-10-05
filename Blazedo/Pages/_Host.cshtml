@@ -1,0 +1,21 @@
+﻿@page "/"
+@namespace Blazedo.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="~/" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blazedo</title>
+    <link rel="stylesheet" href="~/app.css" />
+</head>
+<body>
+    <app>
+        @(await Html.RenderComponentAsync<App>(RenderMode.ServerPrerendered))
+    </app>
+
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>

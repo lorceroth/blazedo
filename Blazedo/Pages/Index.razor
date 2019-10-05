@@ -1,0 +1,160 @@
+﻿@page "/"
+@inject IHttpClientFactory HttpClientFactory
+@inject TodoValidator TodoValidator
+
+<div class="new-todo">
+    @if (!string.IsNullOrEmpty(LastResponseError))
+    {
+        <div class="notification is-danger">
+            <button class="delete" @onclick="@ResetLastResponseError"></button>
+            @LastResponseError
+        </div> 
+    }
+
+    <div class="field is-grouped">
+        <div class="control" style="flex: 1">
+            <input class="input @(!string.IsNullOrEmpty(LastTodoValidationError) ? " is-danger" : null)" type="text" placeholder="What's up next?" @bind="NewTodoDescription" @onkeyup="CreateTodo" />
+            @if (!string.IsNullOrEmpty(LastTodoValidationError))
+            {
+                <span class="help is-danger">
+                    @LastTodoValidationError
+                </span> 
+            }
+        </div>
+
+        <div class="control" style="flex: none">
+            <button class="button is-info" type="button" @onclick="CreateTodo">Submit</button>
+        </div>
+    </div>
+</div>
+
+<div class="todo-items">
+    @foreach (var todo in UnfinishedTodos)
+    {
+        <TodoItem Model="todo" OnChange="UpdateTodo" OnDelete="DeleteTodo" />
+    }
+</div>
+
+<h2 class="title is-4">
+    Completed
+</h2>
+
+<div class="todo-items">
+    @foreach (var todo in CompletedTodos)
+    {
+        <TodoItem Model="todo" OnChange="UpdateTodo" OnDelete="DeleteTodo" />
+    }
+</div>
+
+@code {
+    private HttpClient _client;
+
+    public bool IsLoaded { get; set; } = false;
+
+    public string LastResponseError { get; set; }
+
+    public string LastTodoValidationError { get; set; }
+
+    public string NewTodoDescription { get; set; }
+
+    public ICollection<Todo> Todos { get; set; } = new List<Todo>();
+
+    public IEnumerable<Todo> UnfinishedTodos => Todos.Where(t => !t.CompletedAt.HasValue);
+
+    public IEnumerable<Todo> CompletedTodos => Todos
+        .Where(t => t.CompletedAt.HasValue)
+        .OrderBy(t => t.CompletedAt);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _client = HttpClientFactory.CreateClient(Constants.LocalHttpClientName);
+
+        await GetAllTodos();
+    }
+
+    private async Task GetAllTodos()
+    {
+        try
+        {
+            Todos = await _client.GetJsonAsync<ICollection<Todo>>("api/todos");
+        }
+        catch (JsonException e)
+        {
+            Todos = new List<Todo>();
+        }
+
+        IsLoaded = true;
+    }
+
+    private async Task CreateTodo(EventArgs e)
+    {
+        if (e is KeyboardEventArgs ke && ke.Key != "Enter")
+        {
+            return;
+        }
+
+        var todo = new Todo { Description = NewTodoDescription };
+
+        var validationResult = TodoValidator.Validate(todo);
+        if (!validationResult.IsValid)
+        {
+            LastTodoValidationError = validationResult.Errors.First().ErrorMessage;
+        }
+        else
+        {
+            LastTodoValidationError = null;
+
+            var response = await _client.PostAsync("api/todos", CreateStringContent(todo));
+            if (response.IsSuccessStatusCode)
+            {
+                Todos.Add(todo);
+                NewTodoDescription = "";
+            }
+            else
+            {
+                LastResponseError = $"An error occured while trying to save the item: {response.ReasonPhrase}";
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task UpdateTodo(Todo todo)
+    {
+        var response = await _client.PutAsync($"api/todos/{todo.Id}", CreateStringContent(todo));
+        if (!response.IsSuccessStatusCode)
+        {
+            LastResponseError = $"An error occured while trying to update the item: {response.ReasonPhrase}";
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task DeleteTodo(Todo todo)
+    {
+        var response = await _client.DeleteAsync($"api/todos/{todo.Id}");
+        if (response.IsSuccessStatusCode)
+        {
+            Todos.Remove(todo);
+        }
+        else
+        {
+            LastResponseError = $"An error occured while trying to delete the item: {response.ReasonPhrase}";
+        }
+
+        StateHasChanged();
+    }
+
+    private void ResetLastResponseError()
+    {
+        LastResponseError = null;
+        StateHasChanged();
+    }
+
+    private StringContent CreateStringContent(Todo todo)
+    {
+        var data = JsonSerializer.Serialize(todo);
+
+        return new StringContent(data, System.Text.Encoding.UTF8, "application/json");
+    }
+}
