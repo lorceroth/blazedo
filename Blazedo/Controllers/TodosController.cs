@@ -1,4 +1,4 @@
-﻿using Blazedo.Models;
+using Blazedo.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,7 +18,6 @@ namespace Blazedo.Controllers
         public ActionResult<IOrderedEnumerable<Todo>> Index()
         {
             var todos = _context.Todos.OrderBy(t => t.Id).ToList();
-
             if (!todos.Any())
             {
                 return NoContent();
@@ -31,7 +30,6 @@ namespace Blazedo.Controllers
         public ActionResult<Todo> Show(int id)
         {
             var todo = _context.Todos.FirstOrDefault(t => t.Id == id);
-
             if (todo == null)
             {
                 return NotFound();
@@ -58,8 +56,7 @@ namespace Blazedo.Controllers
                 return BadRequest();
             }
 
-            var existingTodo = _context.Todos.FirstOrDefault(t => t.Id == id);
-            
+            var existingTodo = _context.Todos.FirstOrDefault(t => t.Id == id);    
             if (existingTodo == null)
             {
                 return NotFound();
@@ -80,7 +77,6 @@ namespace Blazedo.Controllers
         public async Task<ActionResult> Delete(int id)
         {
             var existingTodo = _context.Todos.FirstOrDefault(t => t.Id == id);
-
             if (existingTodo == null)
             {
                 return NotFound();

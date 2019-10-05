@@ -1,4 +1,4 @@
-﻿<div class="box todo-item">
+<div class="box todo-item">
     <div class="columns is-customized">
         <div class="column">
             <label class="switch">
@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    @if  (Model.CompletedAt.HasValue)
+    @if (Model.CompletedAt.HasValue)
     {
         <p class="has-text-grey-light">
             Completed @Model.CompletedAt.Value.Humanize()
