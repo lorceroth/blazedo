@@ -1,6 +1,6 @@
 # Blazedo
 
-Blazedo is a simple todo list built with [Blazor](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor) using the [Todos Template](https://github.com/lorceroth/todos-template).
+Blazedo is a simple todo list built for fun to try out [Blazor](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor). It's using the [Todos Template](https://github.com/lorceroth/todos-template).
 
 ## Requirements
 
